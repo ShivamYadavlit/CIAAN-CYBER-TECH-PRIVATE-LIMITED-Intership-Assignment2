@@ -58,10 +58,24 @@ export const authAPI = {
 
 // User API calls
 export const userAPI = {
-  getProfile: (userId) => api.get(`/users/${userId}`),
-  updateProfile: (userId, data) => api.put(`/users/${userId}`, data),
-  getUserPosts: (userId, page = 1, limit = 10) => 
-    api.get(`/users/${userId}/posts?page=${page}&limit=${limit}`),
+  getProfile: (userId) => {
+    // If userId is 'me' or matches current user, use /profile/me endpoint
+    if (userId === 'me') {
+      return api.get('/users/profile/me');
+    }
+    if (!userId) {
+      throw new Error('User ID is required for getProfile');
+    }
+    return api.get(`/users/${userId}`);
+  },
+  getCurrentProfile: () => api.get('/users/profile/me'),
+  updateProfile: (data) => api.put('/users/profile', data),
+  getUserPosts: (userId, page = 1, limit = 10) => {
+    if (!userId) {
+      throw new Error('User ID is required for getUserPosts');
+    }
+    return api.get(`/posts/user/${userId}?page=${page}&limit=${limit}`);
+  },
   searchUsers: (query, page = 1, limit = 20) => 
     api.get(`/users?search=${encodeURIComponent(query)}&page=${page}&limit=${limit}`),
 };

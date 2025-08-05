@@ -1,122 +1,148 @@
 const express = require('express');
-const { executeQuery } = require('../config/database');
+const User = require('../models/User');
+const Post = require('../models/Post');
 const { authenticateToken } = require('../middleware/auth');
 const { profileUpdateValidation, handleValidationErrors } = require('../middleware/validation');
 
 const router = express.Router();
+
+// @route   GET /api/users/profile/me
+// @desc    Get current user's profile
+// @access  Private
+router.get('/profile/me', authenticateToken, async (req, res) => {
+  try {
+    // req.user is the full user document from auth middleware
+    const user = req.user;
+    const userId = user._id;
+
+    // Get user's post count
+    const postCount = await Post.countDocuments({ user_id: userId });
+
+    const userProfile = {
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      bio: user.bio,
+      avatar_url: user.avatar_url,
+      created_at: user.createdAt,
+      postCount
+    };
+
+    res.json({
+      message: 'Profile retrieved successfully',
+      user: userProfile
+    });
+  } catch (error) {
+    console.error('Get current user profile error:', error);
+    res.status(500).json({
+      message: 'Failed to retrieve profile',
+      error: 'PROFILE_RETRIEVAL_FAILED'
+    });
+  }
+});
 
 // @route   GET /api/users/:id
 // @desc    Get user profile by ID
 // @access  Private
 router.get('/:id', authenticateToken, async (req, res) => {
   try {
-    const userId = parseInt(req.params.id);
+    const { id } = req.params;
 
-    if (isNaN(userId)) {
-      return res.status(400).json({
-        message: 'Invalid user ID',
-        error: 'INVALID_USER_ID'
-      });
-    }
-
-    const users = await executeQuery(
-      'SELECT id, name, email, bio, avatar_url, created_at FROM users WHERE id = ?',
-      [userId]
-    );
-
-    if (users.length === 0) {
+    const user = await User.findById(id).select('-password');
+    if (!user) {
       return res.status(404).json({
         message: 'User not found',
         error: 'USER_NOT_FOUND'
       });
     }
 
-    const user = users[0];
-
     // Get user's post count
-    const postCounts = await executeQuery(
-      'SELECT COUNT(*) as count FROM posts WHERE user_id = ?',
-      [userId]
-    );
+    const postCount = await Post.countDocuments({ user_id: id });
 
-    user.postCount = postCounts[0].count;
+    const userProfile = {
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      bio: user.bio,
+      avatar_url: user.avatar_url,
+      created_at: user.createdAt,
+      postCount
+    };
 
     res.json({
       message: 'User profile retrieved successfully',
-      user
+      user: userProfile
     });
   } catch (error) {
     console.error('Get user profile error:', error);
-    res.status(500).json({
-      message: 'Failed to get user profile',
-      error: 'PROFILE_FETCH_FAILED'
-    });
-  }
-});
-
-// @route   PUT /api/users/:id
-// @desc    Update user profile
-// @access  Private
-router.put('/:id', authenticateToken, profileUpdateValidation, handleValidationErrors, async (req, res) => {
-  try {
-    const userId = parseInt(req.params.id);
-    const { name, bio } = req.body;
-
-    if (isNaN(userId)) {
+    
+    if (error.name === 'CastError') {
       return res.status(400).json({
         message: 'Invalid user ID',
         error: 'INVALID_USER_ID'
       });
     }
+    
+    res.status(500).json({
+      message: 'Failed to retrieve user profile',
+      error: 'PROFILE_RETRIEVAL_FAILED'
+    });
+  }
+});
 
-    // Check if user is updating their own profile
-    if (req.user.id !== userId) {
-      return res.status(403).json({
-        message: 'You can only update your own profile',
-        error: 'UNAUTHORIZED_UPDATE'
+// @route   PUT /api/users/profile
+// @desc    Update user profile
+// @access  Private
+router.put('/profile', authenticateToken, profileUpdateValidation, handleValidationErrors, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { name, bio, avatar_url } = req.body;
+
+    // Find and update user
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({
+        message: 'User not found',
+        error: 'USER_NOT_FOUND'
       });
     }
 
-    // Build update query dynamically
-    const updateFields = [];
-    const updateValues = [];
+    // Update fields if provided
+    if (name !== undefined) user.name = name.trim();
+    if (bio !== undefined) user.bio = bio.trim();
+    if (avatar_url !== undefined) user.avatar_url = avatar_url.trim();
 
-    if (name !== undefined) {
-      updateFields.push('name = ?');
-      updateValues.push(name);
-    }
+    await user.save();
 
-    if (bio !== undefined) {
-      updateFields.push('bio = ?');
-      updateValues.push(bio);
-    }
-
-    if (updateFields.length === 0) {
-      return res.status(400).json({
-        message: 'No valid fields provided for update',
-        error: 'NO_UPDATE_FIELDS'
-      });
-    }
-
-    updateValues.push(userId);
-
-    await executeQuery(
-      `UPDATE users SET ${updateFields.join(', ')}, updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
-      updateValues
-    );
-
-    // Get updated user data
-    const users = await executeQuery(
-      'SELECT id, name, email, bio, avatar_url, created_at FROM users WHERE id = ?',
-      [userId]
-    );
+    // Get updated user profile
+    const userProfile = {
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      bio: user.bio,
+      avatar_url: user.avatar_url,
+      created_at: user.createdAt,
+      updated_at: user.updatedAt
+    };
 
     res.json({
       message: 'Profile updated successfully',
-      user: users[0]
+      user: userProfile
     });
   } catch (error) {
     console.error('Update profile error:', error);
+    
+    if (error.name === 'ValidationError') {
+      const errors = Object.values(error.errors).map(err => ({
+        field: err.path,
+        message: err.message
+      }));
+      return res.status(400).json({
+        message: 'Validation failed',
+        errors
+      });
+    }
+    
     res.status(500).json({
       message: 'Failed to update profile',
       error: 'PROFILE_UPDATE_FAILED'
@@ -124,139 +150,105 @@ router.put('/:id', authenticateToken, profileUpdateValidation, handleValidationE
   }
 });
 
-// @route   GET /api/users/:id/posts
-// @desc    Get posts for a specific user
+// @route   GET /api/users
+// @desc    Get all users (for user discovery)
 // @access  Private
-router.get('/:id/posts', authenticateToken, async (req, res) => {
+router.get('/', authenticateToken, async (req, res) => {
   try {
-    const userId = parseInt(req.params.id);
-    // Ensure parameters are valid numbers
-    const page = Math.max(1, parseInt(req.query.page) || 1);
-    const limit = Math.max(1, Math.min(100, parseInt(req.query.limit) || 10));
-    const offset = (page - 1) * limit;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 20;
+    const skip = (page - 1) * limit;
+    const search = req.query.search;
 
-    console.log('User posts query params:', { userId, page, limit, offset });
-
-    if (isNaN(userId)) {
-      return res.status(400).json({
-        message: 'Invalid user ID',
-        error: 'INVALID_USER_ID'
-      });
+    let query = {};
+    
+    // Add search functionality
+    if (search) {
+      query = {
+        $or: [
+          { name: { $regex: search, $options: 'i' } },
+          { email: { $regex: search, $options: 'i' } }
+        ]
+      };
     }
 
-    // Check if user exists
-    const users = await executeQuery(
-      'SELECT id, name FROM users WHERE id = ?',
-      [userId]
+    // Get users with pagination
+    const users = await User.find(query)
+      .select('name email bio avatar_url createdAt')
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .lean();
+
+    const totalUsers = await User.countDocuments(query);
+    const totalPages = Math.ceil(totalUsers / limit);
+
+    // Add post count for each user
+    const usersWithPostCount = await Promise.all(
+      users.map(async (user) => {
+        const postCount = await Post.countDocuments({ user_id: user._id });
+        return {
+          id: user._id,
+          name: user.name,
+          email: user.email,
+          bio: user.bio,
+          avatar_url: user.avatar_url,
+          created_at: user.createdAt,
+          postCount
+        };
+      })
     );
 
-    if (users.length === 0) {
+    res.json({
+      message: 'Users retrieved successfully',
+      users: usersWithPostCount,
+      pagination: {
+        currentPage: page,
+        totalPages,
+        totalUsers,
+        hasNextPage: page < totalPages,
+        hasPrevPage: page > 1
+      }
+    });
+  } catch (error) {
+    console.error('Get users error:', error);
+    res.status(500).json({
+      message: 'Failed to retrieve users',
+      error: 'USERS_RETRIEVAL_FAILED'
+    });
+  }
+});
+
+// @route   DELETE /api/users/profile
+// @desc    Delete user account
+// @access  Private
+router.delete('/profile', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    // Check if user exists
+    const user = await User.findById(userId);
+    if (!user) {
       return res.status(404).json({
         message: 'User not found',
         error: 'USER_NOT_FOUND'
       });
     }
 
-    // Get user's posts with pagination
-    const posts = await executeQuery(`
-      SELECT 
-        p.id,
-        p.content,
-        p.created_at,
-        p.updated_at,
-        u.id as user_id,
-        u.name as user_name,
-        u.avatar_url as user_avatar
-      FROM posts p
-      JOIN users u ON p.user_id = u.id
-      WHERE p.user_id = ?
-      ORDER BY p.created_at DESC
-      LIMIT ${limit} OFFSET ${offset}
-    `, [userId]);
+    // Delete all user's posts first
+    await Post.deleteMany({ user_id: userId });
 
-    // Get total count for pagination
-    const totalCounts = await executeQuery(
-      'SELECT COUNT(*) as count FROM posts WHERE user_id = ?',
-      [userId]
-    );
-
-    const totalPosts = totalCounts[0].count;
-    const totalPages = Math.ceil(totalPosts / limit);
+    // Delete user account
+    await User.findByIdAndDelete(userId);
 
     res.json({
-      message: 'User posts retrieved successfully',
-      posts,
-      pagination: {
-        currentPage: page,
-        totalPages,
-        totalPosts,
-        hasNext: page < totalPages,
-        hasPrevious: page > 1
-      }
+      message: 'Account deleted successfully'
     });
   } catch (error) {
-    console.error('Get user posts error:', error);
+    console.error('Delete account error:', error);
     res.status(500).json({
-      message: 'Failed to get user posts',
-      error: 'USER_POSTS_FETCH_FAILED'
-    });
-  }
-});
-
-// @route   GET /api/users
-// @desc    Search users (for mentions, connections, etc.)
-// @access  Private
-router.get('/', authenticateToken, async (req, res) => {
-  try {
-    const { search, page = 1, limit = 20 } = req.query;
-    const offset = (page - 1) * limit;
-
-    let query = `
-      SELECT id, name, email, bio, avatar_url, created_at
-      FROM users
-    `;
-    let queryParams = [];
-
-    if (search) {
-      query += ` WHERE name LIKE ? OR email LIKE ?`;
-      const searchTerm = `%${search}%`;
-      queryParams.push(searchTerm, searchTerm);
-    }
-
-    query += ` ORDER BY name ASC LIMIT ${limit} OFFSET ${offset}`;
-
-    const users = await executeQuery(query, queryParams);
-
-    // Get total count
-    let countQuery = 'SELECT COUNT(*) as count FROM users';
-    let countParams = [];
-
-    if (search) {
-      countQuery += ' WHERE name LIKE ? OR email LIKE ?';
-      const searchTerm = `%${search}%`;
-      countParams.push(searchTerm, searchTerm);
-    }
-
-    const totalCounts = await executeQuery(countQuery, countParams);
-    const totalUsers = totalCounts[0].count;
-    const totalPages = Math.ceil(totalUsers / limit);
-
-    res.json({
-      message: 'Users retrieved successfully',
-      users,
-      pagination: {
-        currentPage: parseInt(page),
-        totalPages,
-        totalUsers,
-        hasNext: page < totalPages,
-        hasPrevious: page > 1
-      }
-    });
-  } catch (error) {
-    console.error('Search users error:', error);
-    res.status(500).json({
-      message: 'Failed to search users',
-      error: 'USER_SEARCH_FAILED'
+      message: 'Failed to delete account',
+      error: 'ACCOUNT_DELETION_FAILED'
     });
   }
 });

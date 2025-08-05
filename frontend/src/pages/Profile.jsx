@@ -58,7 +58,7 @@ const EditProfileModal = ({ user, isOpen, onClose, onUpdate }) => {
 
     setIsSubmitting(true);
     try {
-      const response = await userAPI.updateProfile(user.id, {
+      const response = await userAPI.updateProfile({
         name: formData.name.trim(),
         bio: formData.bio.trim()
       });
@@ -238,7 +238,8 @@ const Profile = () => {
   const [hasMore, setHasMore] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
 
-  const isOwnProfile = currentUser?.id === parseInt(userId);
+  const isOwnProfile = !userId || currentUser?.id === userId || currentUser?.id === parseInt(userId) || 
+                    currentUser?._id === userId || currentUser?._id === parseInt(userId);
 
   const getInitials = (name) => {
     if (!name) return 'U';
@@ -255,7 +256,15 @@ const Profile = () => {
   const fetchProfile = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await userAPI.getProfile(userId);
+      let response;
+      
+      // If no userId in URL or it's the current user, fetch current user's profile
+      if (!userId || isOwnProfile) {
+        response = await userAPI.getCurrentProfile();
+      } else {
+        response = await userAPI.getProfile(userId);
+      }
+      
       setProfileUser(response.data.user);
       setError(null);
     } catch (err) {
@@ -264,14 +273,23 @@ const Profile = () => {
     } finally {
       setLoading(false);
     }
-  }, [userId]);
+  }, [userId, isOwnProfile]);
 
   const fetchPosts = useCallback(async (pageNum = 1, reset = false) => {
     try {
       if (pageNum === 1) setPostsLoading(true);
       else setLoadingMore(true);
 
-      const response = await userAPI.getUserPosts(userId, pageNum, 10);
+      // Use current user's ID if no userId in URL - try both id and _id
+      const targetUserId = userId || currentUser?.id || currentUser?._id;
+      if (!targetUserId) {
+        console.error('No user ID available for fetching posts');
+        setPostsLoading(false);
+        setLoadingMore(false);
+        return;
+      }
+
+      const response = await userAPI.getUserPosts(targetUserId, pageNum, 10);
       const newPosts = response.data.posts || [];
       
       if (reset || pageNum === 1) {
@@ -287,21 +305,21 @@ const Profile = () => {
       setPostsLoading(false);
       setLoadingMore(false);
     }
-  }, [userId]);
+  }, [userId, currentUser?.id, currentUser?._id]);
 
   useEffect(() => {
-    if (userId) {
-      fetchProfile();
-      fetchPosts();
-    }
-  }, [userId, fetchProfile, fetchPosts]);
+    // Always try to fetch profile - either for the current user or specified user
+    fetchProfile();
+    fetchPosts();
+  }, [fetchProfile, fetchPosts]);
 
   const handleProfileUpdate = async (updatedData) => {
     setProfileUser(prev => ({ ...prev, ...updatedData }));
     
     // Update auth context if it's the current user's profile
     if (isOwnProfile) {
-      await updateUserProfile(currentUser.id, updatedData);
+      const userId = currentUser?.id || currentUser?._id;
+      await updateUserProfile(userId, updatedData);
     }
   };
 

@@ -1,6 +1,16 @@
 import React, { createContext, useReducer, useEffect } from 'react';
 import api from '../services/api';
 
+// Helper function to normalize user object
+const normalizeUser = (user) => {
+  if (!user) return null;
+  return {
+    ...user,
+    id: user._id || user.id,
+    _id: user._id || user.id
+  };
+};
+
 // Initial state
 const initialState = {
   user: null,
@@ -39,7 +49,7 @@ const authReducer = (state, action) => {
     case AUTH_ACTIONS.REGISTER_SUCCESS:
       return {
         ...state,
-        user: action.payload.user,
+        user: normalizeUser(action.payload.user),
         token: action.payload.token,
         isAuthenticated: true,
         loading: false,
@@ -70,7 +80,7 @@ const authReducer = (state, action) => {
     case AUTH_ACTIONS.LOAD_USER:
       return {
         ...state,
-        user: action.payload,
+        user: normalizeUser(action.payload),
         isAuthenticated: true,
         loading: false,
         error: null
@@ -79,7 +89,7 @@ const authReducer = (state, action) => {
     case AUTH_ACTIONS.UPDATE_USER:
       return {
         ...state,
-        user: { ...state.user, ...action.payload },
+        user: normalizeUser({ ...state.user, ...action.payload }),
         error: null
       };
 

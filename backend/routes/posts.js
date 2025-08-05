@@ -1,5 +1,6 @@
 const express = require('express');
-const { executeQuery } = require('../config/database');
+const Post = require('../models/Post');
+const User = require('../models/User');
 const { authenticateToken } = require('../middleware/auth');
 const { postValidation, handleValidationErrors } = require('../middleware/validation');
 
@@ -13,32 +14,45 @@ router.post('/', authenticateToken, postValidation, handleValidationErrors, asyn
     const { content } = req.body;
     const userId = req.user.id;
 
-    const result = await executeQuery(
-      'INSERT INTO posts (user_id, content) VALUES (?, ?)',
-      [userId, content]
-    );
+    // Create new post
+    const post = new Post({
+      user_id: userId,
+      content: content.trim()
+    });
 
-    // Get the created post with user information
-    const posts = await executeQuery(`
-      SELECT 
-        p.id,
-        p.content,
-        p.created_at,
-        p.updated_at,
-        u.id as user_id,
-        u.name as user_name,
-        u.avatar_url as user_avatar
-      FROM posts p
-      JOIN users u ON p.user_id = u.id
-      WHERE p.id = ?
-    `, [result.insertId]);
+    await post.save();
+
+    // Populate user information
+    await post.populate('user_id', 'name email avatar_url');
 
     res.status(201).json({
       message: 'Post created successfully',
-      post: posts[0]
+      post: {
+        id: post._id,
+        content: post.content,
+        created_at: post.createdAt,
+        updated_at: post.updatedAt,
+        user_id: post.user_id._id,
+        user_name: post.user_id.name,
+        user_avatar: post.user_id.avatar_url,
+        likeCount: post.likeCount,
+        commentCount: post.commentCount
+      }
     });
   } catch (error) {
     console.error('Create post error:', error);
+    
+    if (error.name === 'ValidationError') {
+      const errors = Object.values(error.errors).map(err => ({
+        field: err.path,
+        message: err.message
+      }));
+      return res.status(400).json({
+        message: 'Validation failed',
+        errors
+      });
+    }
+    
     res.status(500).json({
       message: 'Failed to create post',
       error: 'POST_CREATION_FAILED'
@@ -51,100 +65,180 @@ router.post('/', authenticateToken, postValidation, handleValidationErrors, asyn
 // @access  Private
 router.get('/', authenticateToken, async (req, res) => {
   try {
-    // Ensure parameters are valid numbers
-    const page = Math.max(1, parseInt(req.query.page) || 1);
-    const limit = Math.max(1, Math.min(100, parseInt(req.query.limit) || 10));
-    const offset = (page - 1) * limit;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
 
-    console.log('Posts query params:', { page, limit, offset });
-
-    // Get posts with user information
-    const posts = await executeQuery(`
-      SELECT 
-        p.id,
-        p.content,
-        p.created_at,
-        p.updated_at,
-        u.id as user_id,
-        u.name as user_name,
-        u.email as user_email,
-        u.avatar_url as user_avatar
-      FROM posts p
-      JOIN users u ON p.user_id = u.id
-      ORDER BY p.created_at DESC
-      LIMIT ${limit} OFFSET ${offset}
-    `);
+    // Get posts with user information, sorted by creation date (newest first)
+    const posts = await Post.find()
+      .populate('user_id', 'name email avatar_url')
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .lean();
 
     // Get total count for pagination
-    const totalCounts = await executeQuery('SELECT COUNT(*) as count FROM posts');
-    const totalPosts = totalCounts[0].count;
+    const totalPosts = await Post.countDocuments();
     const totalPages = Math.ceil(totalPosts / limit);
+
+    // Format posts for response
+    const formattedPosts = posts.map(post => ({
+      id: post._id,
+      content: post.content,
+      created_at: post.createdAt,
+      updated_at: post.updatedAt,
+      user_id: post.user_id._id,
+      user_name: post.user_id.name,
+      user_avatar: post.user_id.avatar_url,
+      likeCount: post.likes ? post.likes.length : 0,
+      commentCount: post.comments ? post.comments.length : 0
+    }));
 
     res.json({
       message: 'Posts retrieved successfully',
-      posts,
+      posts: formattedPosts,
       pagination: {
         currentPage: page,
         totalPages,
         totalPosts,
-        hasNext: page < totalPages,
-        hasPrevious: page > 1
+        hasNextPage: page < totalPages,
+        hasPrevPage: page > 1
       }
     });
   } catch (error) {
     console.error('Get posts error:', error);
     res.status(500).json({
-      message: 'Failed to get posts',
-      error: 'POSTS_FETCH_FAILED'
+      message: 'Failed to retrieve posts',
+      error: 'POSTS_RETRIEVAL_FAILED'
+    });
+  }
+});
+
+// @route   GET /api/posts/user/:userId
+// @desc    Get posts by a specific user
+// @access  Private
+router.get('/user/:userId', authenticateToken, async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    // Verify user exists
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({
+        message: 'User not found',
+        error: 'USER_NOT_FOUND'
+      });
+    }
+
+    // Get user's posts
+    const posts = await Post.find({ user_id: userId })
+      .populate('user_id', 'name email avatar_url')
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .lean();
+
+    const totalPosts = await Post.countDocuments({ user_id: userId });
+    const totalPages = Math.ceil(totalPosts / limit);
+
+    // Format posts for response
+    const formattedPosts = posts.map(post => ({
+      id: post._id,
+      content: post.content,
+      created_at: post.createdAt,
+      updated_at: post.updatedAt,
+      user_id: post.user_id._id,
+      user_name: post.user_id.name,
+      user_avatar: post.user_id.avatar_url,
+      likeCount: post.likes ? post.likes.length : 0,
+      commentCount: post.comments ? post.comments.length : 0
+    }));
+
+    res.json({
+      message: 'User posts retrieved successfully',
+      posts: formattedPosts,
+      user: {
+        id: user._id,
+        name: user.name,
+        avatar_url: user.avatar_url
+      },
+      pagination: {
+        currentPage: page,
+        totalPages,
+        totalPosts,
+        hasNextPage: page < totalPages,
+        hasPrevPage: page > 1
+      }
+    });
+  } catch (error) {
+    console.error('Get user posts error:', error);
+    res.status(500).json({
+      message: 'Failed to retrieve user posts',
+      error: 'USER_POSTS_RETRIEVAL_FAILED'
     });
   }
 });
 
 // @route   GET /api/posts/:id
-// @desc    Get a specific post by ID
+// @desc    Get a specific post
 // @access  Private
 router.get('/:id', authenticateToken, async (req, res) => {
   try {
-    const postId = parseInt(req.params.id);
+    const { id } = req.params;
 
-    if (isNaN(postId)) {
-      return res.status(400).json({
-        message: 'Invalid post ID',
-        error: 'INVALID_POST_ID'
-      });
-    }
+    const post = await Post.findById(id)
+      .populate('user_id', 'name email avatar_url')
+      .populate('comments.user_id', 'name avatar_url')
+      .lean();
 
-    const posts = await executeQuery(`
-      SELECT 
-        p.id,
-        p.content,
-        p.created_at,
-        p.updated_at,
-        u.id as user_id,
-        u.name as user_name,
-        u.email as user_email,
-        u.avatar_url as user_avatar
-      FROM posts p
-      JOIN users u ON p.user_id = u.id
-      WHERE p.id = ?
-    `, [postId]);
-
-    if (posts.length === 0) {
+    if (!post) {
       return res.status(404).json({
         message: 'Post not found',
         error: 'POST_NOT_FOUND'
       });
     }
 
+    // Format post for response
+    const formattedPost = {
+      id: post._id,
+      content: post.content,
+      created_at: post.createdAt,
+      updated_at: post.updatedAt,
+      user_id: post.user_id._id,
+      user_name: post.user_id.name,
+      user_avatar: post.user_id.avatar_url,
+      likeCount: post.likes ? post.likes.length : 0,
+      commentCount: post.comments ? post.comments.length : 0,
+      comments: post.comments ? post.comments.map(comment => ({
+        id: comment._id,
+        content: comment.content,
+        created_at: comment.createdAt,
+        user_id: comment.user_id._id,
+        user_name: comment.user_id.name,
+        user_avatar: comment.user_id.avatar_url
+      })) : []
+    };
+
     res.json({
       message: 'Post retrieved successfully',
-      post: posts[0]
+      post: formattedPost
     });
   } catch (error) {
     console.error('Get post error:', error);
+    
+    if (error.name === 'CastError') {
+      return res.status(400).json({
+        message: 'Invalid post ID',
+        error: 'INVALID_POST_ID'
+      });
+    }
+    
     res.status(500).json({
-      message: 'Failed to get post',
-      error: 'POST_FETCH_FAILED'
+      message: 'Failed to retrieve post',
+      error: 'POST_RETRIEVAL_FAILED'
     });
   }
 });
@@ -154,64 +248,69 @@ router.get('/:id', authenticateToken, async (req, res) => {
 // @access  Private
 router.put('/:id', authenticateToken, postValidation, handleValidationErrors, async (req, res) => {
   try {
-    const postId = parseInt(req.params.id);
+    const { id } = req.params;
     const { content } = req.body;
     const userId = req.user.id;
 
-    if (isNaN(postId)) {
-      return res.status(400).json({
-        message: 'Invalid post ID',
-        error: 'INVALID_POST_ID'
-      });
-    }
-
-    // Check if post exists and belongs to the user
-    const posts = await executeQuery(
-      'SELECT user_id FROM posts WHERE id = ?',
-      [postId]
-    );
-
-    if (posts.length === 0) {
+    const post = await Post.findById(id);
+    
+    if (!post) {
       return res.status(404).json({
         message: 'Post not found',
         error: 'POST_NOT_FOUND'
       });
     }
 
-    if (posts[0].user_id !== userId) {
+    // Check if user owns the post
+    if (post.user_id.toString() !== userId) {
       return res.status(403).json({
         message: 'You can only edit your own posts',
-        error: 'UNAUTHORIZED_EDIT'
+        error: 'UNAUTHORIZED_ACCESS'
       });
     }
 
-    // Update the post
-    await executeQuery(
-      'UPDATE posts SET content = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
-      [content, postId]
-    );
+    // Update post
+    post.content = content.trim();
+    await post.save();
 
-    // Get the updated post with user information
-    const updatedPosts = await executeQuery(`
-      SELECT 
-        p.id,
-        p.content,
-        p.created_at,
-        p.updated_at,
-        u.id as user_id,
-        u.name as user_name,
-        u.avatar_url as user_avatar
-      FROM posts p
-      JOIN users u ON p.user_id = u.id
-      WHERE p.id = ?
-    `, [postId]);
+    // Get updated post with user information
+    await post.populate('user_id', 'name email avatar_url');
 
     res.json({
       message: 'Post updated successfully',
-      post: updatedPosts[0]
+      post: {
+        id: post._id,
+        content: post.content,
+        created_at: post.createdAt,
+        updated_at: post.updatedAt,
+        user_id: post.user_id._id,
+        user_name: post.user_id.name,
+        user_avatar: post.user_id.avatar_url,
+        likeCount: post.likeCount,
+        commentCount: post.commentCount
+      }
     });
   } catch (error) {
     console.error('Update post error:', error);
+    
+    if (error.name === 'CastError') {
+      return res.status(400).json({
+        message: 'Invalid post ID',
+        error: 'INVALID_POST_ID'
+      });
+    }
+    
+    if (error.name === 'ValidationError') {
+      const errors = Object.values(error.errors).map(err => ({
+        field: err.path,
+        message: err.message
+      }));
+      return res.status(400).json({
+        message: 'Validation failed',
+        errors
+      });
+    }
+    
     res.status(500).json({
       message: 'Failed to update post',
       error: 'POST_UPDATE_FAILED'
@@ -224,47 +323,44 @@ router.put('/:id', authenticateToken, postValidation, handleValidationErrors, as
 // @access  Private
 router.delete('/:id', authenticateToken, async (req, res) => {
   try {
-    const postId = parseInt(req.params.id);
+    const { id } = req.params;
     const userId = req.user.id;
 
-    if (isNaN(postId)) {
-      return res.status(400).json({
-        message: 'Invalid post ID',
-        error: 'INVALID_POST_ID'
-      });
-    }
-
-    // Check if post exists and belongs to the user
-    const posts = await executeQuery(
-      'SELECT user_id FROM posts WHERE id = ?',
-      [postId]
-    );
-
-    if (posts.length === 0) {
+    const post = await Post.findById(id);
+    
+    if (!post) {
       return res.status(404).json({
         message: 'Post not found',
         error: 'POST_NOT_FOUND'
       });
     }
 
-    if (posts[0].user_id !== userId) {
+    // Check if user owns the post
+    if (post.user_id.toString() !== userId) {
       return res.status(403).json({
         message: 'You can only delete your own posts',
-        error: 'UNAUTHORIZED_DELETE'
+        error: 'UNAUTHORIZED_ACCESS'
       });
     }
 
-    // Delete the post
-    await executeQuery('DELETE FROM posts WHERE id = ?', [postId]);
+    await Post.findByIdAndDelete(id);
 
     res.json({
       message: 'Post deleted successfully'
     });
   } catch (error) {
     console.error('Delete post error:', error);
+    
+    if (error.name === 'CastError') {
+      return res.status(400).json({
+        message: 'Invalid post ID',
+        error: 'INVALID_POST_ID'
+      });
+    }
+    
     res.status(500).json({
       message: 'Failed to delete post',
-      error: 'POST_DELETE_FAILED'
+      error: 'POST_DELETION_FAILED'
     });
   }
 });

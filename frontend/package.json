@@ -1,8 +1,9 @@
 {
-  "name": "frontend",
+  "name": "community-platform-frontend",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
+  "description": "Frontend application for Community Platform - A social media platform built with React and Vite",
   "scripts": {
     "dev": "vite",
     "build": "vite build",

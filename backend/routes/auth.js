@@ -1,7 +1,6 @@
 const express = require('express');
-const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const { executeQuery } = require('../config/database');
+const User = require('../models/User');
 const { 
   registerValidation, 
   loginValidation, 
@@ -27,46 +26,55 @@ router.post('/register', registerValidation, handleValidationErrors, async (req,
     const { name, email, password, bio } = req.body;
 
     // Check if user already exists
-    const existingUsers = await executeQuery(
-      'SELECT id FROM users WHERE email = ?',
-      [email]
-    );
-
-    if (existingUsers.length > 0) {
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
       return res.status(400).json({
         message: 'User already exists with this email',
         error: 'EMAIL_EXISTS'
       });
     }
 
-    // Hash password
-    const saltRounds = 12;
-    const hashedPassword = await bcrypt.hash(password, saltRounds);
+    // Create user (password will be hashed automatically by the pre-save hook)
+    const user = new User({
+      name: name.trim(),
+      email: email.toLowerCase().trim(),
+      password,
+      bio: bio ? bio.trim() : undefined
+    });
 
-    // Create user
-    const result = await executeQuery(
-      'INSERT INTO users (name, email, password, bio) VALUES (?, ?, ?, ?)',
-      [name, email, hashedPassword, bio || null]
-    );
+    await user.save();
 
-    const userId = result.insertId;
-
-    // Get created user (without password)
-    const users = await executeQuery(
-      'SELECT id, name, email, bio, avatar_url, created_at FROM users WHERE id = ?',
-      [userId]
-    );
-
-    const user = users[0];
-    const token = generateToken(userId);
+    // Generate token
+    const token = generateToken(user._id);
 
     res.status(201).json({
       message: 'User registered successfully',
-      user,
+      user: user.toJSON(), // This excludes the password
       token
     });
   } catch (error) {
     console.error('Registration error:', error);
+    
+    // Handle MongoDB validation errors
+    if (error.name === 'ValidationError') {
+      const errors = Object.values(error.errors).map(err => ({
+        field: err.path,
+        message: err.message
+      }));
+      return res.status(400).json({
+        message: 'Validation failed',
+        errors
+      });
+    }
+    
+    // Handle duplicate key error (email already exists)
+    if (error.code === 11000) {
+      return res.status(400).json({
+        message: 'User already exists with this email',
+        error: 'EMAIL_EXISTS'
+      });
+    }
+
     res.status(500).json({
       message: 'Failed to register user',
       error: 'REGISTRATION_FAILED'
@@ -82,22 +90,16 @@ router.post('/login', loginValidation, handleValidationErrors, async (req, res) 
     const { email, password } = req.body;
 
     // Find user by email
-    const users = await executeQuery(
-      'SELECT id, name, email, password, bio, avatar_url, created_at FROM users WHERE email = ?',
-      [email]
-    );
-
-    if (users.length === 0) {
+    const user = await User.findOne({ email: email.toLowerCase().trim() }).select('+password');
+    if (!user) {
       return res.status(401).json({
         message: 'Invalid email or password',
         error: 'INVALID_CREDENTIALS'
       });
     }
 
-    const user = users[0];
-
     // Check password
-    const isPasswordValid = await bcrypt.compare(password, user.password);
+    const isPasswordValid = await user.comparePassword(password);
     if (!isPasswordValid) {
       return res.status(401).json({
         message: 'Invalid email or password',
@@ -105,14 +107,12 @@ router.post('/login', loginValidation, handleValidationErrors, async (req, res) 
       });
     }
 
-    // Remove password from user object
-    delete user.password;
-
-    const token = generateToken(user.id);
+    // Generate token
+    const token = generateToken(user._id);
 
     res.json({
       message: 'Login successful',
-      user,
+      user: user.toJSON(), // This excludes the password
       token
     });
   } catch (error) {
@@ -142,12 +142,8 @@ router.post('/verify', async (req, res) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     
     // Get user data
-    const users = await executeQuery(
-      'SELECT id, name, email, bio, avatar_url, created_at FROM users WHERE id = ?',
-      [decoded.userId]
-    );
-
-    if (users.length === 0) {
+    const user = await User.findById(decoded.userId);
+    if (!user) {
       return res.status(401).json({
         message: 'User not found',
         error: 'USER_NOT_FOUND'
@@ -156,7 +152,7 @@ router.post('/verify', async (req, res) => {
 
     res.json({
       message: 'Token is valid',
-      user: users[0]
+      user: user.toJSON()
     });
   } catch (error) {
     if (error.name === 'JsonWebTokenError') {
