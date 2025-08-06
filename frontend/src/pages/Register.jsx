@@ -177,33 +177,33 @@ const Register = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="flex justify-center items-center space-x-3">
-          <div className="w-12 h-12 bg-linkedin-blue rounded-lg flex items-center justify-center">
-            <span className="text-white font-bold text-xl">in</span>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50 flex flex-col justify-center py-6 sm:py-12 px-4 sm:px-6 lg:px-8">
+      <div className="w-full max-w-sm sm:max-w-md mx-auto">
+        <div className="flex justify-center items-center space-x-2 sm:space-x-3">
+          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-600 rounded-lg flex items-center justify-center">
+            <span className="text-white font-bold text-lg sm:text-xl">in</span>
           </div>
-          <h1 className="text-3xl font-bold text-gray-900">MiniLinkedIn</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">MiniLinkedIn</h1>
         </div>
-        <h2 className="mt-6 text-center text-2xl font-semibold text-gray-900">
+        <h2 className="mt-4 sm:mt-6 text-center text-xl sm:text-2xl font-semibold text-gray-900">
           Join our community
         </h2>
         <p className="mt-2 text-center text-sm text-gray-600">
           Already have an account?{' '}
           <Link
             to="/login"
-            className="font-medium text-linkedin-blue hover:text-linkedin-darkblue transition-colors duration-200"
+            className="font-medium text-blue-600 hover:text-blue-700 transition-colors duration-200"
           >
             Sign in
           </Link>
         </p>
       </div>
 
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="card-hover">
-          <form className="space-y-6" onSubmit={handleSubmit}>
+      <div className="mt-6 sm:mt-8 w-full max-w-sm sm:max-w-md mx-auto">
+        <div className="glass-card modern-shadow p-6 sm:p-8">
+          <form className="space-y-4 sm:space-y-6" onSubmit={handleSubmit}>
             {error && (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-4 animate-fade-in">
+              <div className="bg-red-50 border border-red-200 rounded-lg p-3 sm:p-4 animate-fade-in">
                 <p className="text-red-600 text-sm font-medium">{error}</p>
               </div>
             )}
@@ -220,11 +220,11 @@ const Register = () => {
                 required
                 value={formData.name}
                 onChange={handleChange}
-                className={`input-field ${formErrors.name ? 'border-red-300 focus:ring-red-500' : ''}`}
+                className={`w-full px-3 sm:px-4 py-3 sm:py-3.5 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50/50 text-sm sm:text-base touch-target ${formErrors.name ? 'border-red-300 focus:ring-red-500' : 'border-gray-200 hover:border-gray-300'}`}
                 placeholder="Enter your full name"
               />
               {formErrors.name && (
-                <p className="form-error">{formErrors.name}</p>
+                <p className="mt-1 text-xs sm:text-sm text-red-600">{formErrors.name}</p>
               )}
             </div>
 
@@ -240,11 +240,11 @@ const Register = () => {
                 required
                 value={formData.email}
                 onChange={handleChange}
-                className={`input-field ${formErrors.email ? 'border-red-300 focus:ring-red-500' : ''}`}
+                className={`w-full px-3 sm:px-4 py-3 sm:py-3.5 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50/50 text-sm sm:text-base touch-target ${formErrors.email ? 'border-red-300 focus:ring-red-500' : 'border-gray-200 hover:border-gray-300'}`}
                 placeholder="Enter your email"
               />
               {formErrors.email && (
-                <p className="form-error">{formErrors.email}</p>
+                <p className="mt-1 text-xs sm:text-sm text-red-600">{formErrors.email}</p>
               )}
             </div>
 
@@ -261,18 +261,18 @@ const Register = () => {
                   required
                   value={formData.password}
                   onChange={handleChange}
-                  className={`input-field pr-12 ${formErrors.password ? 'border-red-300 focus:ring-red-500' : ''}`}
+                  className={`w-full px-3 sm:px-4 py-3 sm:py-3.5 pr-12 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50/50 text-sm sm:text-base touch-target ${formErrors.password ? 'border-red-300 focus:ring-red-500' : 'border-gray-200 hover:border-gray-300'}`}
                   placeholder="Create a strong password"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 transition-colors duration-200"
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 transition-colors duration-200 touch-target"
                 >
                   {showPassword ? (
-                    <EyeOff className="h-5 w-5" />
+                    <EyeOff className="h-4 w-4 sm:h-5 sm:w-5" />
                   ) : (
-                    <Eye className="h-5 w-5" />
+                    <Eye className="h-4 w-4 sm:h-5 sm:w-5" />
                   )}
                 </button>
               </div>
@@ -281,9 +281,9 @@ const Register = () => {
               {formData.password && (
                 <div className="mt-2">
                   <div className="flex items-center space-x-2 mb-1">
-                    <div className="flex-1 bg-gray-200 rounded-full h-2">
+                    <div className="flex-1 bg-gray-200 rounded-full h-1.5 sm:h-2">
                       <div
-                        className={`h-2 rounded-full transition-all duration-300 ${getPasswordStrengthColor()}`}
+                        className={`h-1.5 sm:h-2 rounded-full transition-all duration-300 ${getPasswordStrengthColor()}`}
                         style={{ width: `${(passwordStrength.score / 5) * 100}%` }}
                       ></div>
                     </div>
@@ -298,7 +298,7 @@ const Register = () => {
               )}
               
               {formErrors.password && (
-                <p className="form-error">{formErrors.password}</p>
+                <p className="mt-1 text-xs sm:text-sm text-red-600">{formErrors.password}</p>
               )}
             </div>
 
@@ -315,29 +315,29 @@ const Register = () => {
                   required
                   value={formData.confirmPassword}
                   onChange={handleChange}
-                  className={`input-field pr-12 ${formErrors.confirmPassword ? 'border-red-300 focus:ring-red-500' : ''}`}
+                  className={`w-full px-3 sm:px-4 py-3 sm:py-3.5 pr-12 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50/50 text-sm sm:text-base touch-target ${formErrors.confirmPassword ? 'border-red-300 focus:ring-red-500' : 'border-gray-200 hover:border-gray-300'}`}
                   placeholder="Confirm your password"
                 />
                 <button
                   type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 transition-colors duration-200"
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 transition-colors duration-200 touch-target"
                 >
                   {showConfirmPassword ? (
-                    <EyeOff className="h-5 w-5" />
+                    <EyeOff className="h-4 w-4 sm:h-5 sm:w-5" />
                   ) : (
-                    <Eye className="h-5 w-5" />
+                    <Eye className="h-4 w-4 sm:h-5 sm:w-5" />
                   )}
                 </button>
               </div>
               {formData.confirmPassword && formData.password === formData.confirmPassword && (
                 <div className="flex items-center space-x-1 mt-1">
-                  <CheckCircle className="w-4 h-4 text-green-500" />
+                  <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4 text-green-500" />
                   <span className="text-xs text-green-600">Passwords match</span>
                 </div>
               )}
               {formErrors.confirmPassword && (
-                <p className="form-error">{formErrors.confirmPassword}</p>
+                <p className="mt-1 text-xs sm:text-sm text-red-600">{formErrors.confirmPassword}</p>
               )}
             </div>
 
@@ -351,12 +351,12 @@ const Register = () => {
                 rows={3}
                 value={formData.bio}
                 onChange={handleChange}
-                className={`input-field resize-none ${formErrors.bio ? 'border-red-300 focus:ring-red-500' : ''}`}
+                className={`w-full px-3 sm:px-4 py-3 sm:py-3.5 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50/50 resize-none text-sm sm:text-base touch-target ${formErrors.bio ? 'border-red-300 focus:ring-red-500' : 'border-gray-200 hover:border-gray-300'}`}
                 placeholder="Tell us about yourself..."
               />
               <div className="flex justify-between items-center mt-1">
                 {formErrors.bio && (
-                  <p className="form-error">{formErrors.bio}</p>
+                  <p className="text-xs sm:text-sm text-red-600">{formErrors.bio}</p>
                 )}
                 <span className="text-xs text-gray-500 ml-auto">
                   {formData.bio.length}/500
@@ -368,26 +368,26 @@ const Register = () => {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full btn-primary flex items-center justify-center space-x-2"
+                className="w-full btn-primary flex items-center justify-center space-x-2 py-3 sm:py-3.5 text-sm sm:text-base"
               >
                 {isSubmitting ? (
                   <LoadingSpinner size="sm" color="white" />
                 ) : (
                   <>
-                    <UserPlus className="w-5 h-5" />
+                    <UserPlus className="w-4 h-4 sm:w-5 sm:h-5" />
                     <span>Create Account</span>
                   </>
                 )}
               </button>
             </div>
 
-            <div className="text-xs text-gray-500 text-center">
+            <div className="text-xs text-gray-500 text-center leading-relaxed">
               By clicking "Create Account", you agree to our{' '}
-              <Link to="/terms" className="text-linkedin-blue hover:text-linkedin-darkblue">
+              <Link to="/terms" className="text-blue-600 hover:text-blue-700 touch-target inline-block">
                 Terms of Service
               </Link>{' '}
               and{' '}
-              <Link to="/privacy" className="text-linkedin-blue hover:text-linkedin-darkblue">
+              <Link to="/privacy" className="text-blue-600 hover:text-blue-700 touch-target inline-block">
                 Privacy Policy
               </Link>
             </div>

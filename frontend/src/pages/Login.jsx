@@ -106,33 +106,33 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="flex justify-center items-center space-x-3">
-          <div className="w-12 h-12 bg-linkedin-blue rounded-lg flex items-center justify-center">
-            <span className="text-white font-bold text-xl">in</span>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50 flex flex-col justify-center py-6 sm:py-12 px-4 sm:px-6 lg:px-8">
+      <div className="w-full max-w-sm sm:max-w-md mx-auto">
+        <div className="flex justify-center items-center space-x-2 sm:space-x-3">
+          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-600 rounded-lg flex items-center justify-center">
+            <span className="text-white font-bold text-lg sm:text-xl">in</span>
           </div>
-          <h1 className="text-3xl font-bold text-gray-900">MiniLinkedIn</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">MiniLinkedIn</h1>
         </div>
-        <h2 className="mt-6 text-center text-2xl font-semibold text-gray-900">
+        <h2 className="mt-4 sm:mt-6 text-center text-xl sm:text-2xl font-semibold text-gray-900">
           Welcome back
         </h2>
         <p className="mt-2 text-center text-sm text-gray-600">
           Don't have an account?{' '}
           <Link
             to="/register"
-            className="font-medium text-linkedin-blue hover:text-linkedin-darkblue transition-colors duration-200"
+            className="font-medium text-blue-600 hover:text-blue-700 transition-colors duration-200"
           >
             Join now
           </Link>
         </p>
       </div>
 
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="card-hover">
-          <form className="space-y-6" onSubmit={handleSubmit}>
+      <div className="mt-6 sm:mt-8 w-full max-w-sm sm:max-w-md mx-auto">
+        <div className="glass-card modern-shadow p-6 sm:p-8">
+          <form className="space-y-5 sm:space-y-6" onSubmit={handleSubmit}>
             {error && (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-4 animate-fade-in">
+              <div className="bg-red-50 border border-red-200 rounded-lg p-3 sm:p-4 animate-fade-in">
                 <p className="text-red-600 text-sm font-medium">{error}</p>
               </div>
             )}
@@ -149,11 +149,11 @@ const Login = () => {
                 required
                 value={formData.email}
                 onChange={handleChange}
-                className={`input-field ${formErrors.email ? 'border-red-300 focus:ring-red-500' : ''}`}
+                className={`w-full px-3 sm:px-4 py-3 sm:py-3.5 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50/50 text-sm sm:text-base touch-target ${formErrors.email ? 'border-red-300 focus:ring-red-500' : 'border-gray-200 hover:border-gray-300'}`}
                 placeholder="Enter your email"
               />
               {formErrors.email && (
-                <p className="form-error">{formErrors.email}</p>
+                <p className="mt-1 text-xs sm:text-sm text-red-600">{formErrors.email}</p>
               )}
             </div>
 
@@ -170,33 +170,33 @@ const Login = () => {
                   required
                   value={formData.password}
                   onChange={handleChange}
-                  className={`input-field pr-12 ${formErrors.password ? 'border-red-300 focus:ring-red-500' : ''}`}
+                  className={`w-full px-3 sm:px-4 py-3 sm:py-3.5 pr-12 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50/50 text-sm sm:text-base touch-target ${formErrors.password ? 'border-red-300 focus:ring-red-500' : 'border-gray-200 hover:border-gray-300'}`}
                   placeholder="Enter your password"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 transition-colors duration-200"
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 transition-colors duration-200 touch-target"
                 >
                   {showPassword ? (
-                    <EyeOff className="h-5 w-5" />
+                    <EyeOff className="h-4 w-4 sm:h-5 sm:w-5" />
                   ) : (
-                    <Eye className="h-5 w-5" />
+                    <Eye className="h-4 w-4 sm:h-5 sm:w-5" />
                   )}
                 </button>
               </div>
               {formErrors.password && (
-                <p className="form-error">{formErrors.password}</p>
+                <p className="mt-1 text-xs sm:text-sm text-red-600">{formErrors.password}</p>
               )}
             </div>
 
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col xs:flex-row xs:items-center xs:justify-between space-y-3 xs:space-y-0">
               <div className="flex items-center">
                 <input
                   id="remember-me"
                   name="remember-me"
                   type="checkbox"
-                  className="h-4 w-4 text-linkedin-blue focus:ring-linkedin-blue border-gray-300 rounded"
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded touch-target"
                 />
                 <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700">
                   Remember me
@@ -206,24 +206,24 @@ const Login = () => {
               <div className="text-sm">
                 <Link
                   to="/forgot-password"
-                  className="font-medium text-linkedin-blue hover:text-linkedin-darkblue transition-colors duration-200"
+                  className="font-medium text-blue-600 hover:text-blue-700 transition-colors duration-200 touch-target inline-block py-1"
                 >
                   Forgot password?
                 </Link>
               </div>
             </div>
 
-            <div className="space-y-3">
+            <div className="space-y-3 sm:space-y-4">
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full btn-primary flex items-center justify-center space-x-2"
+                className="w-full btn-primary flex items-center justify-center space-x-2 py-3 sm:py-3.5 text-sm sm:text-base"
               >
                 {isSubmitting ? (
                   <LoadingSpinner size="sm" color="white" />
                 ) : (
                   <>
-                    <LogIn className="w-5 h-5" />
+                    <LogIn className="w-4 h-4 sm:w-5 sm:h-5" />
                     <span>Sign in</span>
                   </>
                 )}
@@ -234,7 +234,7 @@ const Login = () => {
                   <div className="w-full border-t border-gray-300" />
                 </div>
                 <div className="relative flex justify-center text-sm">
-                  <span className="px-2 bg-white text-gray-500">Or</span>
+                  <span className="px-3 bg-white text-gray-500">Or</span>
                 </div>
               </div>
 
@@ -242,17 +242,17 @@ const Login = () => {
                 type="button"
                 onClick={demoLogin}
                 disabled={isSubmitting}
-                className="w-full btn-secondary flex items-center justify-center space-x-2"
+                className="w-full btn-secondary flex items-center justify-center space-x-2 py-3 sm:py-3.5 text-sm sm:text-base"
               >
-                <ArrowRight className="w-5 h-5" />
+                <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" />
                 <span>Try Demo Account</span>
               </button>
             </div>
           </form>
 
-          <div className="mt-6 p-4 bg-blue-50 rounded-lg">
+          <div className="mt-5 sm:mt-6 p-3 sm:p-4 bg-blue-50 rounded-lg">
             <h3 className="text-sm font-medium text-blue-900 mb-2">Demo Credentials:</h3>
-            <p className="text-sm text-blue-700">
+            <p className="text-xs sm:text-sm text-blue-700">
               <strong>Email:</strong> demo@example.com<br />
               <strong>Password:</strong> Demo@1234
             </p>

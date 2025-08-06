@@ -79,20 +79,20 @@ const EditProfileModal = ({ user, isOpen, onClose, onUpdate }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-3 sm:p-4">
       <div className="bg-white rounded-lg max-w-md w-full max-h-[90vh] overflow-y-auto">
-        <div className="p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-bold text-gray-900">Edit Profile</h2>
+        <div className="p-4 sm:p-6">
+          <div className="flex items-center justify-between mb-4 sm:mb-6">
+            <h2 className="text-lg sm:text-xl font-bold text-gray-900">Edit Profile</h2>
             <button
               onClick={onClose}
-              className="p-2 hover:bg-gray-100 rounded-full"
+              className="p-2 hover:bg-gray-100 rounded-full touch-target"
             >
               <X className="w-5 h-5" />
             </button>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
             {errors.general && (
               <div className="bg-red-50 border border-red-200 rounded-lg p-3">
                 <p className="text-red-700 text-sm">{errors.general}</p>
@@ -108,7 +108,7 @@ const EditProfileModal = ({ user, isOpen, onClose, onUpdate }) => {
                 type="text"
                 value={formData.name}
                 onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.name ? 'border-red-300' : 'border-gray-300'}`}
+                className={`w-full px-3 sm:px-4 py-2.5 sm:py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base ${errors.name ? 'border-red-300' : 'border-gray-300'}`}
                 placeholder="Enter your name"
               />
               {errors.name && (
@@ -125,7 +125,7 @@ const EditProfileModal = ({ user, isOpen, onClose, onUpdate }) => {
                 rows={4}
                 value={formData.bio}
                 onChange={(e) => setFormData(prev => ({ ...prev, bio: e.target.value }))}
-                className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none ${errors.bio ? 'border-red-300' : 'border-gray-300'}`}
+                className={`w-full px-3 sm:px-4 py-2.5 sm:py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none text-sm sm:text-base ${errors.bio ? 'border-red-300' : 'border-gray-300'}`}
                 placeholder="Tell us about yourself..."
               />
               {errors.bio && (
@@ -133,18 +133,18 @@ const EditProfileModal = ({ user, isOpen, onClose, onUpdate }) => {
               )}
             </div>
 
-            <div className="flex space-x-3 pt-4">
+            <div className="flex flex-col xs:flex-row space-y-2 xs:space-y-0 xs:space-x-3 pt-4">
               <button
                 type="button"
                 onClick={onClose}
-                className="flex-1 px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50"
+                className="flex-1 px-4 py-2.5 sm:py-3 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm sm:text-base touch-target"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="flex-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2 py-2"
+                className="flex-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2 py-2.5 sm:py-3 text-sm sm:text-base touch-target"
               >
                 {isSubmitting ? (
                   <LoadingSpinner size="sm" />
@@ -241,39 +241,39 @@ const PostCard = ({ post, currentUser, onPostUpdate, onPostDelete }) => {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6 mb-4">
-      <div className="flex items-center justify-between mb-4">
+    <div className="bg-white rounded-lg shadow-md p-4 sm:p-6 mb-4 sm:mb-6">
+      <div className="flex flex-col xs:flex-row xs:items-center xs:justify-between mb-4 space-y-2 xs:space-y-0">
         <div className="flex items-center space-x-2">
-          <span className="text-sm text-gray-500">{formatDate(post.created_at)}</span>
+          <span className="text-xs sm:text-sm text-gray-500">{formatDate(post.created_at)}</span>
           {post.updated_at !== post.created_at && (
             <span className="text-xs text-gray-400">(edited)</span>
           )}
         </div>
         {currentUser && post.user_id === currentUser.id && (
-          <div className="relative dropdown-container">
+          <div className="relative dropdown-container self-start xs:self-auto">
             <button
               onClick={() => setShowDropdown(!showDropdown)}
-              className="p-1 hover:bg-gray-100 rounded-full"
+              className="p-2 hover:bg-gray-100 rounded-full touch-target"
               title="Post options"
             >
-              <MoreHorizontal className="w-4 h-4 text-gray-500" />
+              <MoreHorizontal className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500" />
             </button>
             
             {showDropdown && (
-              <div className="absolute right-0 top-8 w-32 bg-white border border-gray-200 rounded-lg shadow-lg py-1 z-10">
+              <div className="absolute right-0 top-10 sm:top-12 w-36 sm:w-40 bg-white border border-gray-200 rounded-lg shadow-lg py-1 z-10">
                 <button
                   onClick={() => {
                     setIsEditing(true);
                     setShowDropdown(false);
                   }}
-                  className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
+                  className="w-full px-3 py-2 sm:py-2.5 text-left text-sm text-gray-700 hover:bg-gray-100 touch-target"
                   disabled={isUpdating || isDeleting}
                 >
                   Edit
                 </button>
                 <button
                   onClick={handleDeletePost}
-                  className="w-full px-3 py-2 text-left text-sm text-red-600 hover:bg-gray-100"
+                  className="w-full px-3 py-2 sm:py-2.5 text-left text-sm text-red-600 hover:bg-gray-100 touch-target"
                   disabled={isUpdating || isDeleting}
                 >
                   {isDeleting ? 'Deleting...' : 'Delete'}
@@ -285,21 +285,21 @@ const PostCard = ({ post, currentUser, onPostUpdate, onPostDelete }) => {
       </div>
 
       {/* Post Content */}
-      <div className="mb-4">
+      <div className="mb-4 sm:mb-6">
         {isEditing ? (
-          <div className="space-y-3">
+          <div className="space-y-3 sm:space-y-4">
             <textarea
               value={editContent}
               onChange={(e) => setEditContent(e.target.value)}
-              className="w-full p-3 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full p-3 sm:p-4 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
               rows="4"
               placeholder="What's on your mind?"
             />
-            <div className="flex items-center space-x-2">
+            <div className="flex flex-col xs:flex-row space-y-2 xs:space-y-0 xs:space-x-3">
               <button
                 onClick={handleEditPost}
                 disabled={isUpdating || !editContent.trim()}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+                className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2 text-sm sm:text-base px-3 sm:px-4 py-2 sm:py-2.5 flex-1 xs:flex-none touch-target"
               >
                 <Check className="w-4 h-4" />
                 <span>{isUpdating ? 'Updating...' : 'Update'}</span>
@@ -307,7 +307,7 @@ const PostCard = ({ post, currentUser, onPostUpdate, onPostDelete }) => {
               <button
                 onClick={handleCancelEdit}
                 disabled={isUpdating}
-                className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+                className="px-3 sm:px-4 py-2 sm:py-2.5 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2 text-sm sm:text-base flex-1 xs:flex-none touch-target"
               >
                 <X className="w-4 h-4" />
                 <span>Cancel</span>
@@ -315,55 +315,57 @@ const PostCard = ({ post, currentUser, onPostUpdate, onPostDelete }) => {
             </div>
           </div>
         ) : (
-          <p className="text-gray-800 whitespace-pre-wrap">
-            {post.content}
-          </p>
+          <div className="bg-gray-50 rounded-lg p-3 sm:p-4">
+            <p className="text-gray-800 whitespace-pre-wrap text-sm sm:text-base leading-relaxed">
+              {post.content}
+            </p>
+          </div>
         )}
       </div>
 
-      <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+      <div className="flex flex-wrap items-center gap-2 sm:gap-4 pt-4 border-t border-gray-100">
         <button
           onClick={() => setIsLiked(!isLiked)}
-          className={`flex items-center space-x-2 px-4 py-2.5 rounded-xl font-medium transition-all duration-200 transform hover:scale-105 ${
+          className={`flex items-center space-x-1 sm:space-x-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl font-medium transition-all duration-200 transform hover:scale-105 text-sm touch-target ${
             isLiked 
               ? 'text-red-600 bg-red-50 shadow-sm border border-red-100' 
               : 'text-gray-600 hover:text-red-600 hover:bg-red-50 hover:shadow-sm hover:border hover:border-red-100'
           }`}
         >
-          <Heart className={`w-5 h-5 ${isLiked ? 'fill-current' : ''}`} />
-          <span className="text-sm font-semibold">Like</span>
+          <Heart className={`w-4 h-4 sm:w-5 sm:h-5 ${isLiked ? 'fill-current' : ''}`} />
+          <span className="font-semibold hidden xs:block">Like</span>
         </button>
 
         <button
           onClick={() => setShowComments(!showComments)}
-          className="flex items-center space-x-2 px-4 py-2.5 rounded-xl text-gray-600 hover:text-blue-600 hover:bg-blue-50 hover:shadow-sm hover:border hover:border-blue-100 transition-all duration-200 transform hover:scale-105 font-medium"
+          className="flex items-center space-x-1 sm:space-x-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl text-gray-600 hover:text-blue-600 hover:bg-blue-50 hover:shadow-sm hover:border hover:border-blue-100 transition-all duration-200 transform hover:scale-105 font-medium text-sm touch-target"
         >
-          <MessageCircle className="w-5 h-5" />
-          <span className="text-sm font-semibold">Comment</span>
+          <MessageCircle className="w-4 h-4 sm:w-5 sm:h-5" />
+          <span className="font-semibold hidden xs:block">Comment</span>
         </button>
 
-        <button className="flex items-center space-x-2 px-4 py-2.5 rounded-xl text-gray-600 hover:text-green-600 hover:bg-green-50 hover:shadow-sm hover:border hover:border-green-100 transition-all duration-200 transform hover:scale-105 font-medium">
-          <Share className="w-5 h-5" />
-          <span className="text-sm font-semibold">Share</span>
+        <button className="flex items-center space-x-1 sm:space-x-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl text-gray-600 hover:text-green-600 hover:bg-green-50 hover:shadow-sm hover:border hover:border-green-100 transition-all duration-200 transform hover:scale-105 font-medium text-sm touch-target">
+          <Share className="w-4 h-4 sm:w-5 sm:h-5" />
+          <span className="font-semibold hidden xs:block">Share</span>
         </button>
       </div>
 
       {/* Comment Section */}
       {showComments && (
         <div className="mt-4 pt-4 border-t border-gray-100">
-          <div className="flex space-x-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-sm font-bold shadow-sm">
+          <div className="flex space-x-2 sm:space-x-3">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-xs sm:text-sm font-bold shadow-sm flex-shrink-0">
               {currentUser?.name ? getInitials(currentUser.name) : 'U'}
             </div>
-            <div className="flex-1">
+            <div className="flex-1 min-w-0">
               <input
                 type="text"
                 placeholder="Write a comment..."
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50 hover:bg-white transition-colors"
+                className="w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50 hover:bg-white transition-colors text-sm sm:text-base"
               />
             </div>
-            <button className="p-3 text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-200 hover:scale-105 border border-gray-200 hover:border-blue-200 shadow-sm">
-              <Send className="w-5 h-5" />
+            <button className="p-2.5 sm:p-3 text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-200 hover:scale-105 border border-gray-200 hover:border-blue-200 shadow-sm touch-target flex-shrink-0">
+              <Send className="w-4 h-4 sm:w-5 sm:h-5" />
             </button>
           </div>
         </div>
@@ -506,16 +508,16 @@ const Profile = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 pt-20">
-        <div className="max-w-5xl mx-auto px-4 py-12">
-          <div className="glass-card bg-gradient-to-r from-red-50 to-pink-50 border border-red-200/60 p-8 text-center modern-shadow">
-            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <X className="w-8 h-8 text-red-600" />
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 pt-16 sm:pt-20">
+        <div className="max-w-5xl mx-auto px-3 sm:px-4 lg:px-6 py-8 sm:py-12">
+          <div className="glass-card bg-gradient-to-r from-red-50 to-pink-50 border border-red-200/60 p-6 sm:p-8 text-center modern-shadow">
+            <div className="w-12 h-12 sm:w-16 sm:h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <X className="w-6 h-6 sm:w-8 sm:h-8 text-red-600" />
             </div>
-            <p className="text-red-600 mb-6 text-lg font-medium">{error}</p>
+            <p className="text-red-600 mb-4 sm:mb-6 text-base sm:text-lg font-medium px-2">{error}</p>
             <button
               onClick={fetchProfile}
-              className="btn-primary shadow-lg hover:shadow-xl"
+              className="btn-primary shadow-lg hover:shadow-xl text-sm sm:text-base px-4 sm:px-6 py-2.5 sm:py-3 touch-target"
             >
               Try Again
             </button>
@@ -526,34 +528,34 @@ const Profile = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pt-20">
-      <div className="max-w-4xl mx-auto px-4 py-8">
+    <div className="min-h-screen bg-gray-50 pt-16 sm:pt-20">
+      <div className="max-w-4xl mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-6 lg:py-8">
         {/* Profile Header */}
-        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-          <div className="flex items-center space-x-6">
-            <div className="w-24 h-24 bg-blue-600 rounded-full flex items-center justify-center text-white text-2xl font-bold">
+        <div className="bg-white rounded-lg shadow-md p-4 sm:p-6 mb-4 sm:mb-6">
+          <div className="flex flex-col sm:flex-row sm:items-center space-y-4 sm:space-y-0 sm:space-x-4 lg:space-x-6">
+            <div className="w-20 h-20 sm:w-24 sm:h-24 lg:w-28 lg:h-28 bg-blue-600 rounded-full flex items-center justify-center text-white text-xl sm:text-2xl lg:text-3xl font-bold mx-auto sm:mx-0 flex-shrink-0">
               {profileUser?.avatar_url ? (
                 <img 
                   src={profileUser.avatar_url} 
                   alt={profileUser.name} 
-                  className="w-24 h-24 rounded-full object-cover" 
+                  className="w-20 h-20 sm:w-24 sm:h-24 lg:w-28 lg:h-28 rounded-full object-cover" 
                 />
               ) : (
                 getInitials(profileUser?.name)
               )}
             </div>
             
-            <div className="flex-1">
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            <div className="flex-1 text-center sm:text-left">
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-2">
                 {profileUser?.name}
               </h1>
-              <p className="text-gray-600">{profileUser?.email}</p>
+              <p className="text-gray-600 text-sm sm:text-base break-all">{profileUser?.email}</p>
             </div>
             
             {isOwnProfile && (
               <button
                 onClick={() => setIsEditModalOpen(true)}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
+                className="btn-primary flex items-center justify-center space-x-2 text-sm sm:text-base px-4 sm:px-5 py-2.5 sm:py-3 w-full sm:w-auto touch-target"
               >
                 <Edit className="w-4 h-4" />
                 <span>Edit Profile</span>
@@ -563,43 +565,43 @@ const Profile = () => {
           
           {/* Bio Section */}
           {profileUser?.bio && (
-            <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-              <p className="text-gray-700">{profileUser.bio}</p>
+            <div className="mt-4 sm:mt-6 p-3 sm:p-4 bg-gray-50 rounded-lg">
+              <p className="text-gray-700 text-sm sm:text-base leading-relaxed">{profileUser.bio}</p>
             </div>
           )}
           
           {/* Profile Stats */}
-          <div className="mt-6 flex space-x-6 text-sm text-gray-600">
+          <div className="mt-4 sm:mt-6 flex flex-col xs:flex-row xs:space-x-4 lg:space-x-6 space-y-2 xs:space-y-0 text-xs sm:text-sm text-gray-600">
             <div className="flex items-center space-x-2">
-              <Mail className="w-4 h-4" />
-              <span>{profileUser?.email}</span>
+              <Mail className="w-4 h-4 flex-shrink-0" />
+              <span className="truncate">{profileUser?.email}</span>
             </div>
             <div className="flex items-center space-x-2">
-              <Calendar className="w-4 h-4" />
+              <Calendar className="w-4 h-4 flex-shrink-0" />
               <span>Joined {formatDate(profileUser?.created_at)}</span>
             </div>
             <div className="flex items-center space-x-2">
-              <MessageCircle className="w-4 h-4" />
-              <span>{posts.length} posts</span>
+              <MessageCircle className="w-4 h-4 flex-shrink-0" />
+              <span>{posts.length} post{posts.length !== 1 ? 's' : ''}</span>
             </div>
           </div>
         </div>
 
         {/* Posts Section */}
-        <div className="mt-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">
+        <div className="mt-6 sm:mt-8">
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6 px-1">
             {isOwnProfile ? 'Your Posts' : `${profileUser?.name?.split(' ')[0]}'s Posts`}
           </h2>
 
           {postsLoading ? (
-            <div className="flex justify-center py-12">
+            <div className="flex justify-center py-8 sm:py-12">
               <LoadingSpinner size="lg" />
             </div>
           ) : posts.length === 0 ? (
-            <div className="text-center py-12 bg-white rounded-lg shadow-md">
-              <MessageCircle className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">No posts yet</h3>
-              <p className="text-gray-600">
+            <div className="text-center py-8 sm:py-12 bg-white rounded-lg shadow-md mx-1">
+              <MessageCircle className="w-12 h-12 sm:w-16 sm:h-16 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2">No posts yet</h3>
+              <p className="text-gray-600 text-sm sm:text-base px-4">
                 {isOwnProfile 
                   ? 'Share your first post!' 
                   : `${profileUser?.name?.split(' ')[0]} hasn't posted anything yet.`}
@@ -607,7 +609,7 @@ const Profile = () => {
             </div>
           ) : (
             <>
-              <div className="space-y-6">
+              <div className="space-y-4 sm:space-y-6">
                 {posts.map((post) => (
                   <PostCard 
                     key={post.id}
@@ -621,11 +623,11 @@ const Profile = () => {
               
               {/* Load More Button */}
               {hasMore && (
-                <div className="text-center mt-8">
+                <div className="text-center mt-6 sm:mt-8">
                   <button
                     onClick={loadMorePosts}
                     disabled={loadingMore}
-                    className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center space-x-2 mx-auto"
+                    className="btn-primary disabled:opacity-50 flex items-center justify-center space-x-2 mx-auto text-sm sm:text-base px-4 sm:px-6 py-2.5 sm:py-3 touch-target"
                   >
                     {loadingMore ? (
                       <LoadingSpinner size="sm" />
