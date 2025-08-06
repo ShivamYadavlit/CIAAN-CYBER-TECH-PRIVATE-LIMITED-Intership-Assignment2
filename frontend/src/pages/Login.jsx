@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
-import { Eye, EyeOff, LogIn, ArrowRight } from 'lucide-react';
+import { Eye, EyeOff, LogIn } from 'lucide-react';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 
 const Login = () => {
@@ -13,7 +13,7 @@ const Login = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formErrors, setFormErrors] = useState({});
 
-  const { login, isAuthenticated, error, clearError } = useAuth();
+  const { login, isAuthenticated, error } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -80,26 +80,6 @@ const Login = () => {
       }
     } catch (err) {
       console.error('Login error:', err);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const demoLogin = async () => {
-    // Clear any previous authentication errors before new attempt
-    if (error) {
-      clearError();
-    }
-
-    setIsSubmitting(true);
-
-    try {
-      const result = await login('demo@example.com', 'Demo@1234');
-      if (result.success) {
-        navigate(from, { replace: true });
-      }
-    } catch (err) {
-      console.error('Demo login error:', err);
     } finally {
       setIsSubmitting(false);
     }
@@ -196,9 +176,9 @@ const Login = () => {
                   id="remember-me"
                   name="remember-me"
                   type="checkbox"
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded touch-target"
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded focus:ring-2 focus:ring-offset-0"
                 />
-                <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700">
+                <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700 cursor-pointer">
                   Remember me
                 </label>
               </div>
@@ -228,33 +208,18 @@ const Login = () => {
                   </>
                 )}
               </button>
-
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-gray-300" />
-                </div>
-                <div className="relative flex justify-center text-sm">
-                  <span className="px-3 bg-white text-gray-500">Or</span>
-                </div>
-              </div>
-
-              <button
-                type="button"
-                onClick={demoLogin}
-                disabled={isSubmitting}
-                className="w-full btn-secondary flex items-center justify-center space-x-2 py-3 sm:py-3.5 text-sm sm:text-base"
-              >
-                <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" />
-                <span>Try Demo Account</span>
-              </button>
             </div>
           </form>
 
-          <div className="mt-5 sm:mt-6 p-3 sm:p-4 bg-blue-50 rounded-lg">
-            <h3 className="text-sm font-medium text-blue-900 mb-2">Demo Credentials:</h3>
-            <p className="text-xs sm:text-sm text-blue-700">
-              <strong>Email:</strong> demo@example.com<br />
-              <strong>Password:</strong> Demo@1234
+          <div className="mt-6 text-center">
+            <p className="text-sm text-gray-600">
+              Don't have an account?{' '}
+              <Link 
+                to="/register" 
+                className="font-medium text-blue-600 hover:text-blue-500 transition-colors duration-200"
+              >
+                Sign up here
+              </Link>
             </p>
           </div>
         </div>
