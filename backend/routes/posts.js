@@ -114,6 +114,74 @@ router.get('/', authenticateToken, async (req, res) => {
   }
 });
 
+// @route   GET /api/posts/search
+// @desc    Search posts by content
+// @access  Private
+router.get('/search', authenticateToken, async (req, res) => {
+  try {
+    const { q: query, page = 1, limit = 10 } = req.query;
+    
+    if (!query || query.trim() === '') {
+      return res.status(400).json({
+        message: 'Search query is required',
+        error: 'SEARCH_QUERY_REQUIRED'
+      });
+    }
+
+    const pageNum = parseInt(page);
+    const limitNum = parseInt(limit);
+    const skip = (pageNum - 1) * limitNum;
+
+    // Search posts by content using regex (case-insensitive)
+    const searchFilter = {
+      content: { $regex: query.trim(), $options: 'i' }
+    };
+
+    const posts = await Post.find(searchFilter)
+      .populate('user_id', 'name email avatar_url')
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limitNum)
+      .lean();
+
+    // Get total count for pagination
+    const totalPosts = await Post.countDocuments(searchFilter);
+    const totalPages = Math.ceil(totalPosts / limitNum);
+
+    // Format posts for response
+    const formattedPosts = posts.map(post => ({
+      id: post._id,
+      content: post.content,
+      created_at: post.createdAt,
+      updated_at: post.updatedAt,
+      user_id: post.user_id._id,
+      user_name: post.user_id.name,
+      user_avatar: post.user_id.avatar_url,
+      likeCount: post.likes ? post.likes.length : 0,
+      commentCount: post.comments ? post.comments.length : 0
+    }));
+
+    res.json({
+      message: 'Posts search completed',
+      posts: formattedPosts,
+      query: query.trim(),
+      pagination: {
+        currentPage: pageNum,
+        totalPages,
+        totalPosts,
+        hasNextPage: pageNum < totalPages,
+        hasPrevPage: pageNum > 1
+      }
+    });
+  } catch (error) {
+    console.error('Search posts error:', error);
+    res.status(500).json({
+      message: 'Failed to search posts',
+      error: 'POSTS_SEARCH_FAILED'
+    });
+  }
+});
+
 // @route   GET /api/posts/user/:userId
 // @desc    Get posts by a specific user
 // @access  Private

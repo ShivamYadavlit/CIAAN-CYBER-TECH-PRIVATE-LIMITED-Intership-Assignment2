@@ -13,6 +13,7 @@ import Home from './pages/Home';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Profile from './pages/Profile';
+import Search from './pages/Search';
 
 // Guest Route wrapper - redirects authenticated users to home
 const GuestRoute = ({ children }) => {
@@ -63,6 +64,14 @@ const AppContent = () => {
             element={
               <ProtectedRoute>
                 <Home />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/search" 
+            element={
+              <ProtectedRoute>
+                <Search />
               </ProtectedRoute>
             } 
           />

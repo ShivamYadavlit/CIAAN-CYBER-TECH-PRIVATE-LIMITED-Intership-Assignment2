@@ -87,6 +87,8 @@ export const postAPI = {
   getPost: (postId) => api.get(`/posts/${postId}`),
   updatePost: (postId, data) => api.put(`/posts/${postId}`, data),
   deletePost: (postId) => api.delete(`/posts/${postId}`),
+  searchPosts: (query, page = 1, limit = 20) => 
+    api.get(`/posts/search?q=${encodeURIComponent(query)}&page=${page}&limit=${limit}`),
 };
 
 // Utility functions
